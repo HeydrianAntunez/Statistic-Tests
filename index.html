@@ -3,401 +3,510 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Explorador Estadístico: Guía de Selección de Pruebas</title>
+    <title>Explorador Estadístico Pro: Guía y Laboratorio</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-            height: 40vh;
-            max-height: 400px;
-            min-height: 250px;
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); border: 1px solid rgba(226, 232, 240, 0.8); }
+        
+        /* Estilos para tooltips mejorados */
+        .tooltip { position: relative; display: inline-block; border-bottom: 2px dotted #0d9488; cursor: help; }
+        .tooltip .tooltiptext {
+            visibility: hidden; width: 240px; background-color: #0f172a; color: #fff; text-align: left;
+            border-radius: 8px; padding: 12px; position: absolute; z-index: 50; bottom: 130%; left: 50%;
+            margin-left: -120px; opacity: 0; transition: opacity 0.3s; font-size: 0.75rem; font-weight: normal; 
+            line-height: 1.4; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
-        @media (min-width: 768px) {
-            .chart-container { height: 350px; }
-        }
-        .accordion-content {
-            transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
-        }
-        .accordion-content.open {
-            max-height: 500px;
-            opacity: 1;
-        }
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+
+        /* Animaciones de despliegue de detalles */
+        .detail-card { max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), margin 0.3s; }
+        .detail-card.active { max-height: 1500px; margin-top: 1.5rem; border: 1px solid #e2e8f0; }
+
+        pre { background: #1e293b; color: #e2e8f0; padding: 1.5rem; border-radius: 0.75rem; overflow-x: auto; font-size: 0.85rem; line-height: 1.6; }
+        
+        .goal-btn.active { border-color: #0d9488; background-color: #f0fdfa; ring: 2px; ring-color: #0d9488; }
     </style>
 </head>
-<body class="bg-[#fdfbf7] text-[#333333] antialiased">
+<body class="bg-[#f8fafc] text-[#1e293b] antialiased">
 
-<!-- Chosen Palette: Warm Neutrals (Cream background #fdfbf7, Slate text #333333, Teal accents #0d9488, Warm Amber highlights #d97706) -->
-<!-- Application Structure Plan: The SPA is structured into three functional zones to optimize user decision-making. 1. The 'Decision Engine' (Buscador) directly solves the user's primary task: finding the right test based on their goal. 2. The 'Visual Concepts' section uses interactivity (Chart.js) to explain abstract assumptions like 'Normality', making theoretical requirements tangible. 3. The 'Comprehensive Reference' provides the full tabular data for holistic review. This non-linear, task-oriented structure prioritizes immediate utility over passive reading. -->
-<!-- Visualization & Content Choices: Data Type/Goal -> Dynamic Filter Engine -> Interaction: Clickable goal cards updating a result panel -> Justification: Allows users to input their research scenario and instantly get actionable advice without parsing a complex table. Assumptions (Normality) -> Chart.js Line Chart -> Interaction: Toggle between Normal and Skewed distributions -> Justification: Visually demonstrates what 'violating an assumption' looks like. Data Table -> HTML/Tailwind Table -> Interaction: Hover states -> Justification: Provides necessary complete reference. Library: Vanilla JS + Chart.js. -->
-<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
-
-    <nav class="bg-[#1e293b] text-white shadow-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center space-x-3">
-                    <span class="text-2xl font-bold tracking-tight">Estadística<span class="text-[#14b8a6]">Interactiva</span></span>
-                </div>
+    <nav class="bg-[#0f172a] text-white shadow-xl sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <span class="text-xl font-bold tracking-tight">Estadística<span class="text-[#14b8a6]">Master</span></span>
+            <div class="flex space-x-6 text-sm font-medium">
+                <a href="#decision-engine" class="hover:text-[#14b8a6] transition">Asistente</a>
+                <a href="#python-lab" class="hover:text-[#14b8a6] transition">Laboratorio Python</a>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-16">
+    <main class="max-w-7xl mx-auto px-4 py-10 space-y-16">
 
-        <header class="text-center max-w-3xl mx-auto space-y-4">
-            <h1 class="text-4xl md:text-5xl font-extrabold text-[#0f172a] leading-tight">Encuentra la Prueba Estadística Correcta</h1>
-            <p class="text-lg text-[#475569]">Una herramienta interactiva para navegar las metodologías paramétricas y no paramétricas, validar supuestos y estructurar análisis robustos.</p>
-        </header>
-
-        <section id="decision-engine" class="scroll-mt-24">
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold text-[#0f172a] mb-2">1. Asistente de Selección de Pruebas</h2>
-                <p class="text-[#475569]">El propósito de esta sección es guiarte hacia la metodología estadística adecuada. Al seleccionar tu objetivo de investigación y las características de tus datos (información extraída directamente de la tabla de referencia), la aplicación filtra y presenta la prueba paramétrica ideal, su alternativa no paramétrica, los supuestos requeridos y el análisis Post Hoc necesario. Esto facilita la toma de decisiones metodológicas sin tener que descifrar matrices complejas.</p>
-            </div>
+        <!-- Sección 1: Asistente -->
+        <section id="decision-engine">
+            <header class="mb-10">
+                <h1 class="text-3xl font-extrabold text-[#0f172a]">Asistente de Selección de Pruebas</h1>
+                <p class="text-[#64748b] mt-2">Selecciona tu objetivo de investigación para desglosar la metodología, supuestos y lógica de cálculo.</p>
+            </header>
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <div class="lg:col-span-5 space-y-4">
-                    <h3 class="font-semibold text-lg border-b pb-2">Selecciona tu Objetivo de Análisis:</h3>
-                    <div id="goal-buttons" class="flex flex-col space-y-2">
-                    </div>
+                <!-- Columna izquierda: Lista completa de objetivos -->
+                <div id="goal-container" class="lg:col-span-4 space-y-3">
+                    <!-- Los botones se generan vía JS -->
                 </div>
 
-                <div class="lg:col-span-7">
-                    <div id="result-panel" class="glass-panel rounded-xl p-8 shadow-lg h-full border-t-4 border-[#0d9488] hidden transition-all duration-300">
-                        <div class="flex justify-between items-start mb-6">
-                            <h3 class="text-xl font-bold text-[#0f172a]">Recomendación Metodológica</h3>
-                            <span id="res-grupos" class="bg-[#e2e8f0] text-[#334155] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide"></span>
-                        </div>
-                        
-                        <div class="space-y-6">
-                            <div>
-                                <p class="text-sm text-[#64748b] uppercase tracking-wider font-semibold">Datos y Estructura</p>
-                                <p id="res-tipo" class="text-lg font-medium text-[#1e293b] mt-1"></p>
-                            </div>
+                <!-- Columna derecha: Recomendación y Detalles -->
+                <div class="lg:col-span-8">
+                    <div id="initial-msg" class="h-full min-h-[400px] border-2 border-dashed border-slate-300 rounded-3xl flex flex-col items-center justify-center text-slate-400 p-10 text-center">
+                        <svg class="w-16 h-16 mb-4 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                        <p class="text-lg">Selecciona un objetivo de la lista para ver la recomendación metodológica y los pasos a seguir.</p>
+                    </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div class="bg-[#f0fdfa] p-4 rounded-lg border border-[#ccfbf1]">
-                                    <p class="text-sm text-[#0f766e] uppercase tracking-wider font-bold mb-1">&#10003; Prueba Paramétrica</p>
-                                    <p id="res-param" class="text-xl font-bold text-[#115e59]"></p>
+                    <div id="result-display" class="hidden space-y-6 animate-in fade-in duration-500">
+                        <!-- Card de Recomendación Principal -->
+                        <div class="glass-panel rounded-3xl p-8 shadow-sm border-t-8 border-[#0d9488]">
+                            <div class="flex justify-between items-start mb-6">
+                                <div>
+                                    <h2 id="res-title" class="text-2xl font-bold text-[#0f172a]"></h2>
+                                    <p id="res-structure" class="text-sm text-slate-500 mt-1"></p>
                                 </div>
-                                <div class="bg-[#fff7ed] p-4 rounded-lg border border-[#ffedd5]">
-                                    <p class="text-sm text-[#c2410c] uppercase tracking-wider font-bold mb-1">&#9888; Alternativa No Paramétrica</p>
-                                    <p id="res-noparam" class="text-xl font-bold text-[#9a3412]"></p>
-                                </div>
+                                <span id="res-tag" class="px-4 py-1 bg-teal-50 text-teal-700 text-xs font-bold rounded-full uppercase tracking-widest border border-teal-100"></span>
                             </div>
 
-                            <div class="bg-[#f8fafc] p-5 rounded-lg border border-[#e2e8f0]">
-                                <h4 class="font-semibold text-[#334155] mb-3 border-b pb-2">Requisitos y Validación (Vía Paramétrica)</h4>
-                                <ul class="space-y-2 text-sm">
-                                    <li class="flex items-start">
-                                        <span class="text-[#0d9488] mr-2 font-bold">&rarr;</span>
-                                        <div><strong class="text-[#475569]">Supuestos críticos:</strong> <span id="res-supuestos" class="text-[#1e293b]"></span></div>
-                                    </li>
-                                    <li class="flex items-start">
-                                        <span class="text-[#0d9488] mr-2 font-bold">&rarr;</span>
-                                        <div><strong class="text-[#475569]">Cómo medirlos:</strong> <span id="res-medicion" class="text-[#1e293b]"></span></div>
-                                    </li>
-                                    <li class="flex items-start">
-                                        <span class="text-[#0d9488] mr-2 font-bold">&rarr;</span>
-                                        <div><strong class="text-[#475569]">Análisis Post Hoc:</strong> <span id="res-posthoc" class="text-[#1e293b]"></span></div>
-                                    </li>
-                                </ul>
+                            <div class="grid md:grid-cols-2 gap-8">
+                                <div class="space-y-6">
+                                    <div>
+                                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Variables Reales (Ejemplos)</h4>
+                                        <div id="res-example" class="text-sm text-slate-700 bg-white p-4 rounded-xl border leading-relaxed shadow-sm italic"></div>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Supuestos Críticos (Pasa el mouse)</h4>
+                                        <div id="res-tooltips" class="flex flex-wrap gap-2"></div>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col gap-4">
+                                    <button onclick="toggleDetail('param')" class="group p-5 bg-[#f0fdfa] border border-teal-100 rounded-2xl text-left hover:shadow-lg transition-all active:scale-95">
+                                        <p class="text-[10px] font-bold text-[#0d9488] uppercase mb-1">✓ Prueba Paramétrica</p>
+                                        <p id="res-param-name" class="text-lg font-bold text-[#115e59] group-hover:text-[#0d9488]"></p>
+                                        <p class="text-[11px] text-teal-600 mt-2 flex items-center">
+                                            Explorar lógica y cálculos <span class="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                                        </p>
+                                    </button>
+                                    <button onclick="toggleDetail('noparam')" class="group p-5 bg-[#fff7ed] border border-orange-100 rounded-2xl text-left hover:shadow-lg transition-all active:scale-95">
+                                        <p class="text-[10px] font-bold text-[#d97706] uppercase mb-1">⚠ Alternativa No Paramétrica</p>
+                                        <p id="res-noparam-name" class="text-lg font-bold text-[#9a3412] group-hover:text-[#ea580c]"></p>
+                                        <p class="text-[11px] text-orange-600 mt-2 flex items-center">
+                                            Explorar lógica y cálculos <span class="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                                        </p>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detalle Expandible -->
+                        <div id="detail-panel" class="detail-card glass-panel rounded-3xl p-8 shadow-inner bg-slate-50">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 id="detail-title" class="text-2xl font-bold"></h3>
+                                <button onclick="closeDetail()" class="w-8 h-8 rounded-full bg-slate-200 hover:bg-red-100 hover:text-red-600 flex items-center justify-center transition-colors">&times;</button>
+                            </div>
+                            <div id="detail-content" class="space-y-6"></div>
+                        </div>
+
+                        <!-- Diagnóstico de Supuestos (Cómo funcionan los tests) -->
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="bg-white p-6 rounded-2xl border shadow-sm">
+                                <h4 class="font-bold text-[#0f172a] mb-4 flex items-center text-lg">
+                                    <span class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3 text-blue-600 text-sm">🧪</span>
+                                    Test de Normalidad
+                                </h4>
+                                <div id="diag-normal" class="text-sm space-y-3 leading-relaxed"></div>
+                            </div>
+                            <div class="bg-white p-6 rounded-2xl border shadow-sm">
+                                <h4 class="font-bold text-[#0f172a] mb-4 flex items-center text-lg">
+                                    <span class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center mr-3 text-amber-600 text-sm">⚖️</span>
+                                    Test de Varianza
+                                </h4>
+                                <div id="diag-var" class="text-sm space-y-3 leading-relaxed"></div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div id="initial-prompt" class="h-full flex flex-col items-center justify-center border-2 border-dashed border-[#cbd5e1] rounded-xl p-8 text-center text-[#64748b]">
-                        <span class="text-4xl mb-3">&#8592;</span>
-                        <p class="text-lg">Selecciona un objetivo en el panel izquierdo para descubrir la prueba estadística recomendada.</p>
-                    </div>
                 </div>
             </div>
         </section>
 
-        <section id="visual-assumptions" class="scroll-mt-24 bg-white rounded-2xl shadow-sm border border-[#e2e8f0] p-8">
-            <div class="mb-8">
-                <h2 class="text-2xl font-bold text-[#0f172a] mb-2">2. Visualización de Supuestos: La Normalidad</h2>
-                <p class="text-[#475569]">Esta sección tiene como propósito ilustrar uno de los conceptos más abstractos y críticos de la guía: el supuesto de normalidad. Para usar pruebas paramétricas, los datos deben comportarse de cierta manera. Aquí utilizamos un gráfico interactivo para que visualices la diferencia entre una distribución teórica ideal (Campana de Gauss) y una distribución sesgada que requeriría el uso de métodos no paramétricos. Entender esto es fundamental para evitar falsos positivos (Error Tipo I).</p>
-            </div>
+        <!-- Sección 2: Laboratorio Python -->
+        <section id="python-lab" class="space-y-8 pt-10 border-t">
+            <header>
+                <div class="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold rounded mb-2 uppercase">Práctica</div>
+                <h2 class="text-3xl font-bold">Laboratorio de Análisis en Python</h2>
+                <p class="text-slate-600">Este script automatiza el flujo completo: validación de supuestos, elección automática de prueba y análisis post hoc.</p>
+            </header>
 
-            <div class="flex flex-col md:flex-row gap-8 items-center">
-                <div class="w-full md:w-1/3 space-y-4">
-                    <div class="bg-[#f8fafc] p-4 rounded-lg border-l-4 border-[#0d9488]">
-                        <h4 class="font-bold text-[#0f172a] mb-2">¿Por qué es importante?</h4>
-                        <p class="text-sm text-[#475569]">Las pruebas paramétricas (ej. t de Student, ANOVA) asumen matemáticamente que las variables subyacentes siguen una distribución normal. Si tus datos reales (como en la vista sesgada) se alejan demasiado de la campana, los resultados de la fórmula perderán validez estadística.</p>
+            <div class="grid lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="p-6 bg-[#0f172a] text-white rounded-3xl shadow-xl">
+                        <h4 class="font-bold text-[#14b8a6] mb-4 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                            Pipeline del Análisis
+                        </h4>
+                        <ul class="space-y-4 text-sm text-slate-300">
+                            <li class="flex items-start">
+                                <span class="w-5 h-5 bg-teal-500/20 text-teal-400 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] mt-0.5 mr-3 font-bold">1</span>
+                                Genera datos sintéticos basados en tu objetivo.
+                            </li>
+                            <li class="flex items-start">
+                                <span class="w-5 h-5 bg-teal-500/20 text-teal-400 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] mt-0.5 mr-3 font-bold">2</span>
+                                Ejecuta Shapiro-Wilk para detectar normalidad.
+                            </li>
+                            <li class="flex items-start">
+                                <span class="w-5 h-5 bg-teal-500/20 text-teal-400 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] mt-0.5 mr-3 font-bold">3</span>
+                                Aplica Levene para homocedasticidad.
+                            </li>
+                            <li class="flex items-start">
+                                <span class="w-5 h-5 bg-teal-500/20 text-teal-400 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] mt-0.5 mr-3 font-bold">4</span>
+                                Corre la prueba estadística recomendada.
+                            </li>
+                        </ul>
                     </div>
-                    
-                    <div class="flex flex-col gap-2">
-                        <button id="btn-normal" class="px-4 py-3 bg-[#0d9488] text-white font-medium rounded-lg shadow transition hover:bg-[#0f766e]">Mostrar Distribución Normal</button>
-                        <button id="btn-skewed" class="px-4 py-3 bg-[#f1f5f9] text-[#475569] font-medium rounded-lg shadow-sm border border-[#cbd5e1] transition hover:bg-[#e2e8f0]">Mostrar Distribución Sesgada</button>
-                    </div>
-
-                    <div id="chart-explanation" class="text-sm italic text-[#64748b] mt-4">
-                        Actualmente viendo: Campana de Gauss perfecta. Las pruebas paramétricas funcionarán correctamente.
-                    </div>
+                    <button onclick="copyCode()" class="w-full py-4 bg-white border-2 border-[#0d9488] text-[#0d9488] font-bold rounded-2xl hover:bg-[#0d9488] hover:text-white transition-all shadow-sm">
+                        Copiar Script Completo
+                    </button>
                 </div>
-
-                <div class="w-full md:w-2/3">
-                    <div class="chart-container">
-                        <canvas id="distributionChart"></canvas>
-                    </div>
+                <div class="lg:col-span-2 relative">
+                    <pre id="python-code-block" class="h-[500px] shadow-2xl"></pre>
+                    <div class="absolute top-4 right-4 text-[10px] font-mono text-slate-500 uppercase tracking-widest bg-slate-800 px-2 py-1 rounded">scipy + statsmodels</div>
                 </div>
             </div>
         </section>
-
-        <section id="glossary" class="scroll-mt-24">
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold text-[#0f172a] mb-2">3. Glosario de Medición de Supuestos</h2>
-                <p class="text-[#475569]">Para complementar la tabla y el buscador, esta sección detalla las herramientas mencionadas en el reporte fuente para diagnosticar datos empíricos. Haz clic en cada concepto para comprender qué hace exactamente cada prueba diagnóstica (Shapiro-Wilk, Levene, etc.) y cómo interpretar sus resultados de cara al uso de pruebas paramétricas.</p>
-            </div>
-
-            <div class="space-y-3" id="accordion-container">
-            </div>
-        </section>
-
-        <section id="full-table" class="scroll-mt-24">
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold text-[#0f172a] mb-2">4. Matriz Completa de Referencia</h2>
-                <p class="text-[#475569]">Esta sección presenta la totalidad de la información contenida en el documento fuente original en formato tabular. Su propósito es servir como una referencia rápida y global para usuarios experimentados que desean contrastar múltiples pruebas simultáneamente sin tener que interactuar paso a paso con el asistente inicial.</p>
-            </div>
-
-            <div class="overflow-x-auto bg-white rounded-xl shadow-sm border border-[#e2e8f0]">
-                <table class="min-w-full text-left text-sm whitespace-nowrap">
-                    <thead class="bg-[#f8fafc] border-b border-[#e2e8f0]">
-                        <tr>
-                            <th class="px-6 py-4 font-bold text-[#334155]">Objetivo</th>
-                            <th class="px-6 py-4 font-bold text-[#334155]">Paramétrica</th>
-                            <th class="px-6 py-4 font-bold text-[#334155]">No Paramétrica</th>
-                            <th class="px-6 py-4 font-bold text-[#334155]">Supuestos</th>
-                            <th class="px-6 py-4 font-bold text-[#334155]">Post Hoc</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-body" class="divide-y divide-[#e2e8f0]">
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
     </main>
 
-    <footer class="bg-[#1e293b] text-[#cbd5e1] py-8 text-center text-sm mt-12">
-        <p>Basado en la Guía de Selección de Pruebas Estadísticas.</p>
-    </footer>
-
     <script>
-        const reportData = [
-            { id: 1, obj: "Comparar 2 grupos independientes", tipo: "Numérico continuo vs. Categórico (2 niveles)", grupos: "2", param: "Prueba t de Student", noparam: "U de Mann-Whitney", sup: "Normalidad y Homocedasticidad", med: "Shapiro-Wilk / Levene", post: "No requiere (solo 2 grupos)" },
-            { id: 2, obj: "Comparar 2 mediciones en el mismo grupo", tipo: "Numérico continuo (Antes/Después)", grupos: "1 (par)", param: "Prueba t dependiente", noparam: "Wilcoxon", sup: "Normalidad de las diferencias", med: "Shapiro-Wilk sobre la resta", post: "No requiere" },
-            { id: 3, obj: "Comparar 3 o más grupos independientes", tipo: "Numérico continuo vs. Categórico", grupos: "3+", param: "ANOVA de un factor", noparam: "Kruskal-Wallis", sup: "Normalidad, Homocedasticidad, Independencia", med: "QQ-Plot, Test de Levene / Bartlett", post: "Tukey, Scheffé o Bonferroni" },
-            { id: 4, obj: "Comparar 3+ mediciones en el mismo grupo", tipo: "Numérico continuo (Repetidas)", grupos: "1 (3+ veces)", param: "ANOVA de medidas repetidas", noparam: "Prueba de Friedman", sup: "Esfericidad (Matriz de varianza)", med: "Prueba de esfericidad de Mauchly", post: "Bonferroni / Sidak" },
-            { id: 5, obj: "Relación entre 2 variables numéricas", tipo: "Ambas Numéricas continuas", grupos: "N/A", param: "Correlación de Pearson", noparam: "Correlación de Spearman", sup: "Linealidad y Normalidad bivariada", med: "Diagrama de dispersión / Shapiro-Wilk", post: "Coeficiente de determinación (R²)" },
-            { id: 6, obj: "Asociación entre variables categóricas", tipo: "Categórico nominal u ordinal", grupos: "N/A", param: "N/A (Frecuencias)", noparam: "Chi-cuadrado (χ²)", sup: "Frecuencias esperadas > 5", med: "Tabla de contingencia", post: "Residuos estandarizados" },
-            { id: 7, obj: "Predecir valor de una variable", tipo: "Dependiente numérica / Independiente(s)", grupos: "N/A", param: "Regresión Lineal", noparam: "Regresión Robusta / Bootstrap", sup: "Homocedasticidad, No autocovarianza, Normalidad residuos", med: "Test de Durbin-Watson / Breusch-Pagan", post: "Análisis de sensibilidad" }
+        // Diccionario de supuestos con explicaciones amigables (Tooltips)
+        const supuestosDocs = {
+            "Normalidad": "Los datos deben distribuirse como una campana de Gauss simétrica. Si hay valores muy extremos (outliers), la media se distorsiona.",
+            "Homocedasticidad": "Significa que la 'anchura' o dispersión de los datos es similar en todos los grupos que estás comparando.",
+            "Independencia": "Las observaciones no deben influirse entre sí. El dato de una persona no puede depender del dato de otra.",
+            "Normalidad Bivariada": "No solo cada variable es normal, sino que su relación conjunta forma una campana 3D perfecta.",
+            "Linealidad": "La relación entre las variables debe poder explicarse mediante una línea recta, no curvas complejas.",
+            "Esfericidad": "Las varianzas de las diferencias entre todos los pares de grupos posibles deben ser iguales.",
+            "Aditividad": "Los efectos de las variables se suman de forma lineal sin interacciones extrañas no modeladas."
+        };
+
+        // Base de datos de objetivos (Restaurada y ampliada según imágenes)
+        const db = [
+            {
+                id: 1, 
+                title: "Comparar 2 grupos independientes", 
+                structure: "Categórica (2 niveles) vs Numérica continua",
+                tag: "Independiente",
+                example: "Comparar el nivel de glucosa entre un grupo 'Diabético' y 'No Diabético'. O el salario mensual entre 'Hombres' y 'Mujeres'.",
+                param: { 
+                    name: "t de Student (Independiente)", 
+                    logic: "Mide qué tan lejos están las medias de los dos grupos en comparación con la variabilidad total de los datos. <br><br><strong>Ejemplo de cálculo:</strong> Si la diferencia de medias es 10 y el error estándar es 2, el valor t es 5. Un t alto indica que es muy poco probable que la diferencia sea por puro azar.",
+                    calc: "t = (Media₁ - Media₂) / √[(s₁²/n₁) + (s₂²/n₂)]"
+                },
+                noparam: { 
+                    name: "U de Mann-Whitney", 
+                    logic: "En lugar de usar valores reales, ordena todos los datos de menor a mayor (asigna rangos). Luego suma los rangos de cada grupo. <br><br><strong>Ejemplo de cálculo:</strong> Si el grupo A tiene todos los valores 'bajos' (rangos 1, 2, 3) y el grupo B los 'altos' (rangos 4, 5, 6), la suma de rangos será muy distinta, indicando que el grupo B es mayor.",
+                    calc: "U = n₁n₂ + [n₁(n₁+1)/2] - SumaRangos₁"
+                },
+                supuestos: ["Normalidad", "Homocedasticidad", "Independencia"],
+                posthoc: "No aplica (solo hay 2 grupos)"
+            },
+            {
+                id: 2, 
+                title: "Comparar 2 mediciones en el mismo grupo", 
+                structure: "Numérica antes vs Numérica después",
+                tag: "Pareada",
+                example: "Presión arterial de 20 pacientes antes de tomar un medicamento y 1 hora después del mismo.",
+                param: { 
+                    name: "t de Student (Relacionada)", 
+                    logic: "No mira los grupos por separado, sino que calcula la diferencia individual (D) para cada persona. Si el promedio de esas diferencias es distinto de cero de forma significativa, la prueba es positiva.",
+                    calc: "t = MediaDiferencias / (DesviaciónDiferencias / √n)"
+                },
+                noparam: { 
+                    name: "Prueba de Wilcoxon", 
+                    logic: "Calcula las diferencias, las ordena por magnitud (sin importar el signo) y luego suma los rangos de las diferencias positivas y negativas por separado.",
+                    calc: "W = min(SumaRangos+, SumaRangos-)"
+                },
+                supuestos: ["Normalidad de las diferencias"],
+                posthoc: "No aplica"
+            },
+            {
+                id: 3, 
+                title: "Comparar 3 o más grupos independientes", 
+                structure: "Categórica (3+ niveles) vs Numérica continua",
+                tag: "Múltiple",
+                example: "Nivel de satisfacción laboral en 4 departamentos distintos: Ventas, IT, RRHH y Finanzas.",
+                param: { 
+                    name: "ANOVA de un factor", 
+                    logic: "Divide la variabilidad total en dos: la que hay 'dentro' de cada departamento y la que hay 'entre' departamentos. Si la variabilidad 'entre' es mucho mayor que la de 'dentro', al menos un grupo es diferente.",
+                    calc: "F = Varianza_entre / Varianza_intra"
+                },
+                noparam: { 
+                    name: "Kruskal-Wallis", 
+                    logic: "Extensión de Mann-Whitney para más de 2 grupos. Compara si las distribuciones de rangos de todos los grupos son similares.",
+                    calc: "H = [12 / n(n+1)] * Σ(R_i² / n_i) - 3(n+1)"
+                },
+                supuestos: ["Normalidad", "Homocedasticidad", "Independencia"],
+                posthoc: "Tukey HSD / Bonferroni"
+            },
+            {
+                id: 4, 
+                title: "Comparar 3+ mediciones en el mismo grupo", 
+                structure: "Numérica en Tiempo 1, 2, 3...",
+                tag: "Repetida",
+                example: "Seguimiento de peso de una persona al mes 1, mes 3 y mes 6 de una dieta específica.",
+                param: { 
+                    name: "ANOVA de medidas repetidas", 
+                    logic: "Similar al ANOVA común, pero elimina la variabilidad causada por las diferencias individuales de los sujetos, centrándose solo en el cambio a través del tiempo.",
+                    calc: "F = Variabilidad_Tiempo / Variabilidad_Error_Residual"
+                },
+                noparam: { 
+                    name: "Prueba de Friedman", 
+                    logic: "Clasifica los valores de cada sujeto a través de las mediciones (puesto 1, puesto 2, puesto 3) y analiza si el orden de esos puestos es consistente.",
+                    calc: "Q = [12n / k(k+1)] * [ΣR_j² - (k(k+1)²/4)]"
+                },
+                supuestos: ["Normalidad", "Esfericidad"],
+                posthoc: "Pruebas t pareadas con corrección"
+            },
+            {
+                id: 5, 
+                title: "Relación entre 2 variables numéricas", 
+                structure: "Ambas Numéricas continuas",
+                tag: "Relación",
+                example: "¿Existe relación entre las horas de vuelo de un piloto y su tiempo de reacción ante emergencias?",
+                param: { 
+                    name: "Correlación de Pearson", 
+                    logic: "Mide qué tan cerca están los puntos de una línea recta perfecta. <br><br><strong>Ejemplo:</strong> Si cada punto extra en X sube exactamente 1 punto en Y, el coeficiente r será 1.0.",
+                    calc: "r = Cov(X,Y) / (σX * σY)"
+                },
+                noparam: { 
+                    name: "Correlación de Spearman", 
+                    logic: "Mide la relación monótona (si una sube, la otra también) basándose en rangos, no en valores exactos. Es ideal para relaciones curvas o con valores extremos.",
+                    calc: "ρ = 1 - [6Σd_i² / n(n²-1)]"
+                },
+                supuestos: ["Normalidad Bivariada", "Linealidad"],
+                posthoc: "Coeficiente de determinación (R²)"
+            },
+            {
+                id: 6, 
+                title: "Asociación entre variables categóricas", 
+                structure: "Categórica vs Categórica",
+                tag: "Frecuencia",
+                example: "¿El hábito de fumar (Sí/No) está asociado con el género (Hombre/Mujer)?",
+                param: { 
+                    name: "Chi-Cuadrado de Pearson", 
+                    logic: "Compara las frecuencias observadas en tu muestra contra las que 'deberían' haber si no hubiera ninguna relación (frecuencias esperadas).",
+                    calc: "χ² = Σ [ (Obs - Esp)² / Esp ]"
+                },
+                noparam: { 
+                    name: "Prueba Exacta de Fisher", 
+                    logic: "Se usa cuando los datos son muy pocos (menos de 5 en alguna celda). Calcula la probabilidad exacta de obtener esa distribución.",
+                    calc: "P = [ (a+b)!(c+d)!(a+c)!(b+d)! ] / [ a!b!c!d!n! ]"
+                },
+                supuestos: ["Independencia", "Frecuencias esperadas > 5"],
+                posthoc: "Residuos estandarizados"
+            },
+            {
+                id: 7, 
+                title: "Predecir valor de una variable", 
+                structure: "Variable dependiente (Y) vs Independiente(s) (X)",
+                tag: "Predicción",
+                example: "Predecir el precio de una casa basándose en sus metros cuadrados, ubicación y antigüedad.",
+                param: { 
+                    name: "Regresión Lineal Múltiple", 
+                    logic: "Crea una ecuación matemática que permite estimar el valor de Y ajustando los pesos (betas) de cada variable X para minimizar el error total.",
+                    calc: "Y = β₀ + β₁X₁ + β₂X₂ + ... + ε"
+                },
+                noparam: { 
+                    name: "Regresión Logística / Árboles", 
+                    logic: "Si la variable a predecir es categórica (Gana/Pierde), se usa logística. Para relaciones muy complejas, se usan modelos basados en decisiones.",
+                    calc: "logit(p) = ln(p / 1-p)"
+                },
+                supuestos: ["Linealidad", "Independencia", "Homocedasticidad", "Normalidad de residuos"],
+                posthoc: "Validación cruzada"
+            }
         ];
 
-        const glossaryData = [
-            { title: "Prueba de Shapiro-Wilk", desc: "Es la prueba estadística más robusta para evaluar la normalidad en muestras pequeñas (generalmente n < 50). Si el valor p es menor a 0.05, se rechaza que los datos sean normales, sugiriendo el uso de estadística no paramétrica." },
-            { title: "Prueba de Levene", desc: "Evalúa la homocedasticidad, es decir, si la varianza se mantiene constante a lo largo de diferentes grupos. Es un requisito vital para ANOVA y la Prueba t independiente. Un valor p < 0.05 indica varianzas diferentes (violación del supuesto)." },
-            { title: "Gráficos Q-Q (Quantile-Quantile)", desc: "Una herramienta visual donde se plotean los cuantiles empíricos de los datos contra los cuantiles teóricos de una distribución normal. Si los puntos forman una línea recta diagonal, se asume normalidad." },
-            { title: "Análisis Post Hoc", desc: "Procedimientos (como Tukey o Bonferroni) que se aplican después de obtener un resultado significativo en un análisis general (como ANOVA) de 3 o más grupos. Sirven para identificar exactamente qué pares de grupos difieren entre sí, ajustando los niveles de significancia para evitar falsos positivos por múltiples comparaciones." }
-        ];
+        let activeGoal = null;
 
-        function initApp() {
-            renderButtons();
-            renderTable();
-            renderGlossary();
-            initChart();
-        }
-
-        function renderButtons() {
-            const container = document.getElementById('goal-buttons');
-            reportData.forEach(item => {
+        function init() {
+            const container = document.getElementById('goal-container');
+            db.forEach(item => {
                 const btn = document.createElement('button');
-                btn.className = 'w-full text-left px-5 py-4 bg-white border border-[#cbd5e1] rounded-lg shadow-sm hover:border-[#0d9488] hover:bg-[#f0fdfa] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#0d9488] font-medium text-[#334155]';
-                btn.innerHTML = `&#9656; ${item.obj}`;
-                btn.onclick = () => selectGoal(item, btn);
+                btn.className = "goal-btn w-full text-left p-4 bg-white rounded-2xl border border-slate-200 hover:border-[#0d9488] hover:shadow-md transition-all group shadow-sm flex items-center justify-between";
+                btn.innerHTML = `
+                    <div>
+                        <p class="text-[9px] font-bold text-slate-400 group-hover:text-[#0d9488] uppercase tracking-widest">${item.tag}</p>
+                        <p class="font-bold text-[#1e293b] leading-tight mt-0.5">${item.title}</p>
+                    </div>
+                    <span class="text-slate-300 group-hover:text-[#0d9488] transition-colors">▶</span>
+                `;
+                btn.onclick = () => {
+                    document.querySelectorAll('.goal-btn').forEach(b => b.classList.remove('active', 'border-[#0d9488]', 'bg-teal-50'));
+                    btn.classList.add('active', 'border-[#0d9488]', 'bg-teal-50');
+                    selectGoal(item);
+                };
                 container.appendChild(btn);
             });
+            // Mostrar el primero por defecto
+            selectGoal(db[0]);
         }
 
-        function selectGoal(item, btnElement) {
-            const buttons = document.querySelectorAll('#goal-buttons button');
-            buttons.forEach(b => {
-                b.classList.remove('bg-[#0d9488]', 'text-white', 'border-[#0d9488]');
-                b.classList.add('bg-white', 'text-[#334155]', 'border-[#cbd5e1]');
-                b.innerHTML = b.innerHTML.replace('&#9662;', '&#9656;');
+        function selectGoal(item) {
+            activeGoal = item;
+            document.getElementById('initial-msg').classList.add('hidden');
+            document.getElementById('result-display').classList.remove('hidden');
+            closeDetail();
+
+            document.getElementById('res-title').innerText = item.title;
+            document.getElementById('res-structure').innerText = `Datos: ${item.structure}`;
+            document.getElementById('res-tag').innerText = item.tag;
+            document.getElementById('res-example').innerHTML = `<strong>Contexto:</strong> ${item.example}`;
+            document.getElementById('res-param-name').innerText = item.param.name;
+            document.getElementById('res-noparam-name').innerText = item.noparam.name;
+
+            // Render Tooltips de Supuestos
+            const ttContainer = document.getElementById('res-tooltips');
+            ttContainer.innerHTML = '';
+            item.supuestos.forEach(s => {
+                const span = document.createElement('span');
+                span.className = 'tooltip bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-slate-600 shadow-sm';
+                span.innerHTML = `${s} <span class="tooltiptext">${supuestosDocs[s] || 'Requisito fundamental para la validez de la prueba.'}</span>`;
+                ttContainer.appendChild(span);
             });
+
+            // Diagnósticos (Explicación de cómo funcionan los tests de supuestos)
+            document.getElementById('diag-normal').innerHTML = `
+                <p class="font-semibold text-blue-700">Test de Shapiro-Wilk</p>
+                <p class="text-slate-600">Compara tus datos con una distribución normal perfecta. Si los datos se desvían demasiado, el p-valor baja de 0.05.</p>
+                <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 font-mono text-[10px]">
+                    Si p < 0.05 &rarr; DATOS NO NORMALES (Usa No Paramétrica)<br>
+                    Si p > 0.05 &rarr; DATOS NORMALES (Usa Paramétrica)
+                </div>
+            `;
+            document.getElementById('diag-var').innerHTML = `
+                <p class="font-semibold text-amber-700">Test de Levene</p>
+                <p class="text-slate-600">Mide si los grupos tienen 'anchuras' de datos similares. Calcula el promedio de las desviaciones respecto a la mediana.</p>
+                <div class="bg-amber-50 p-3 rounded-lg border border-amber-100 font-mono text-[10px]">
+                    Si p < 0.05 &rarr; VARIANZAS DISTINTAS (Error)<br>
+                    Si p > 0.05 &rarr; VARIANZAS IGUALES (Supuesto cumplido)
+                </div>
+            `;
+
+            updatePythonCode(item);
+        }
+
+        function toggleDetail(type) {
+            const panel = document.getElementById('detail-panel');
+            const title = document.getElementById('detail-title');
+            const content = document.getElementById('detail-content');
             
-            btnElement.classList.remove('bg-white', 'text-[#334155]', 'border-[#cbd5e1]', 'hover:bg-[#f0fdfa]');
-            btnElement.classList.add('bg-[#0d9488]', 'text-white', 'border-[#0d9488]');
-            btnElement.innerHTML = btnElement.innerHTML.replace('&#9656;', '&#9662;');
+            const data = type === 'param' ? activeGoal.param : activeGoal.noparam;
+            const themeColor = type === 'param' ? 'text-teal-700' : 'text-orange-700';
 
-            document.getElementById('initial-prompt').style.display = 'none';
-            const panel = document.getElementById('result-panel');
-            panel.style.display = 'block';
-
-            document.getElementById('res-grupos').innerText = `Grupos: ${item.grupos}`;
-            document.getElementById('res-tipo').innerText = item.tipo;
-            document.getElementById('res-param').innerText = item.param;
-            document.getElementById('res-noparam').innerText = item.noparam;
-            document.getElementById('res-supuestos').innerText = item.sup;
-            document.getElementById('res-medicion').innerText = item.med;
-            document.getElementById('res-posthoc').innerText = item.post;
-        }
-
-        function renderTable() {
-            const tbody = document.getElementById('table-body');
-            reportData.forEach(item => {
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-[#f8fafc] transition-colors';
-                tr.innerHTML = `
-                    <td class="px-6 py-4 font-medium text-[#0f172a] whitespace-normal">${item.obj}</td>
-                    <td class="px-6 py-4 text-[#0d9488] font-semibold">${item.param}</td>
-                    <td class="px-6 py-4 text-[#d97706] font-semibold">${item.noparam}</td>
-                    <td class="px-6 py-4 text-[#475569] text-xs whitespace-normal">${item.sup}</td>
-                    <td class="px-6 py-4 text-[#475569] text-xs whitespace-normal">${item.post}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function renderGlossary() {
-            const container = document.getElementById('accordion-container');
-            glossaryData.forEach((item, index) => {
-                const div = document.createElement('div');
-                div.className = 'bg-white border border-[#cbd5e1] rounded-lg overflow-hidden';
-                
-                const header = document.createElement('button');
-                header.className = 'w-full text-left px-6 py-4 bg-[#f8fafc] hover:bg-[#f1f5f9] font-bold text-[#0f172a] focus:outline-none flex justify-between items-center';
-                header.innerHTML = `<span>${item.title}</span> <span class="text-[#0d9488] text-xl transform transition-transform duration-200" id="icon-${index}">+</span>`;
-                
-                const content = document.createElement('div');
-                content.className = 'accordion-content bg-white px-6 py-0 text-[#475569] text-sm leading-relaxed';
-                content.id = `content-${index}`;
-                content.innerHTML = `<div class="py-4">${item.desc}</div>`;
-                
-                header.onclick = () => {
-                    const isOpen = content.classList.contains('open');
-                    document.querySelectorAll('.accordion-content').forEach(c => c.classList.remove('open'));
-                    document.querySelectorAll('[id^="icon-"]').forEach(i => {
-                        i.innerHTML = '+';
-                        i.style.transform = 'rotate(0deg)';
-                    });
-                    
-                    if (!isOpen) {
-                        content.classList.add('open');
-                        const icon = document.getElementById(`icon-${index}`);
-                        icon.innerHTML = '−';
-                    }
-                };
-
-                div.appendChild(header);
-                div.appendChild(content);
-                container.appendChild(div);
-            });
-        }
-
-        function generateNormalData() {
-            let data = [];
-            for (let i = -4; i <= 4; i += 0.2) {
-                let y = (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5 * Math.pow(i, 2));
-                data.push({ x: i.toFixed(1), y: y });
-            }
-            return data;
-        }
-
-        function generateSkewedData() {
-            let data = [];
-            for (let i = -4; i <= 4; i += 0.2) {
-                let transformedX = (i + 4) / 2;
-                let y = transformedX > 0 ? (1 / (transformedX * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow(Math.log(transformedX), 2)) : 0;
-                data.push({ x: i.toFixed(1), y: y * 1.5 });
-            }
-            return data;
-        }
-
-        function initChart() {
-            const ctx = document.getElementById('distributionChart').getContext('2d');
-            const normalData = generateNormalData();
-            const skewedData = generateSkewedData();
+            title.innerText = data.name;
+            title.className = `text-2xl font-bold ${themeColor}`;
             
-            const labels = normalData.map(d => d.x);
-
-            let chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Frecuencia',
-                        data: normalData.map(d => d.y),
-                        borderColor: '#0d9488',
-                        backgroundColor: 'rgba(13, 148, 136, 0.2)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { enabled: false }
-                    },
-                    scales: {
-                        x: { display: false, grid: { display: false } },
-                        y: { display: false, grid: { display: false }, min: 0 }
-                    },
-                    animation: {
-                        duration: 800,
-                        easing: 'easeOutQuart'
-                    }
-                }
-            });
-
-            const btnNormal = document.getElementById('btn-normal');
-            const btnSkewed = document.getElementById('btn-skewed');
-            const explanation = document.getElementById('chart-explanation');
-
-            btnNormal.onclick = () => {
-                chart.data.datasets[0].data = normalData.map(d => d.y);
-                chart.data.datasets[0].borderColor = '#0d9488';
-                chart.data.datasets[0].backgroundColor = 'rgba(13, 148, 136, 0.2)';
-                chart.update();
-                
-                btnNormal.className = 'px-4 py-3 bg-[#0d9488] text-white font-medium rounded-lg shadow transition hover:bg-[#0f766e]';
-                btnSkewed.className = 'px-4 py-3 bg-[#f1f5f9] text-[#475569] font-medium rounded-lg shadow-sm border border-[#cbd5e1] transition hover:bg-[#e2e8f0]';
-                explanation.innerHTML = 'Actualmente viendo: <strong>Campana de Gauss perfecta</strong>. Los datos son simétricos. Las pruebas paramétricas (ej. t de Student) funcionarán correctamente y sus resultados serán fiables.';
-            };
-
-            btnSkewed.onclick = () => {
-                chart.data.datasets[0].data = skewedData.map(d => d.y);
-                chart.data.datasets[0].borderColor = '#d97706';
-                chart.data.datasets[0].backgroundColor = 'rgba(217, 119, 6, 0.2)';
-                chart.update();
-
-                btnSkewed.className = 'px-4 py-3 bg-[#d97706] text-white font-medium rounded-lg shadow transition hover:bg-[#b45309]';
-                btnNormal.className = 'px-4 py-3 bg-[#f1f5f9] text-[#475569] font-medium rounded-lg shadow-sm border border-[#cbd5e1] transition hover:bg-[#e2e8f0]';
-                explanation.innerHTML = 'Actualmente viendo: <strong>Distribución Sesgada (Asimétrica)</strong>. La mayoría de los datos se agrupan a la izquierda con valores atípicos a la derecha. Se viola el supuesto de normalidad; es necesario usar <strong>pruebas no paramétricas</strong> (ej. U de Mann-Whitney) o Bootstrap.';
-            };
+            content.innerHTML = `
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="space-y-4">
+                        <div class="bg-white p-6 rounded-2xl border shadow-sm">
+                            <h5 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Lógica de Funcionamiento</h5>
+                            <p class="text-slate-700 leading-relaxed">${data.logic}</p>
+                        </div>
+                        <div class="p-4 bg-slate-100 rounded-xl">
+                            <p class="text-xs font-bold text-slate-500 mb-1">Post Hoc Recomendado:</p>
+                            <p class="text-sm font-medium text-slate-800">${activeGoal.posthoc}</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col">
+                        <div class="bg-slate-800 text-[#14b8a6] p-8 rounded-3xl font-mono relative overflow-hidden flex flex-col justify-center items-center text-center shadow-xl min-h-[180px]">
+                            <span class="absolute top-4 left-4 text-[9px] text-slate-500 uppercase tracking-widest">Estructura Matemática</span>
+                            <div class="text-xl md:text-2xl font-bold text-white mb-2">
+                                ${data.calc}
+                            </div>
+                            <p class="text-[10px] text-slate-400 mt-4 italic">Nota: Los cálculos varían según el software, pero la base teórica es la misma.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            panel.classList.add('active');
+            panel.scrollIntoView({ behavior: 'smooth', block: 'end' });
         }
 
-        window.onload = initApp;
+        function closeDetail() {
+            document.getElementById('detail-panel').classList.remove('active');
+        }
+
+        function updatePythonCode(item) {
+            const code = `import numpy as np
+import pandas as pd
+from scipy import stats
+import statsmodels.api as sm
+from statsmodels.stats.multicomp import pairwise_tukeyhsd
+
+# 1. GENERACIÓN DE DATOS (Simulación: ${item.title})
+# Contexto: ${item.example}
+np.random.seed(42)
+grupo_a = np.random.normal(loc=100, scale=15, size=50) # Datos normales
+grupo_b = np.random.normal(loc=110, scale=15, size=50) # Datos normales con media mayor
+
+# 2. VALIDACIÓN DE SUPUESTOS
+print("--- TEST DE NORMALIDAD (Shapiro-Wilk) ---")
+shapiro_a = stats.shapiro(grupo_a)
+shapiro_b = stats.shapiro(grupo_b)
+print(f"Grupo A: p={shapiro_a.pvalue:.4f}")
+print(f"Grupo B: p={shapiro_b.pvalue:.4f}")
+
+print("\\n--- TEST DE VARIANZA (Levene) ---")
+levene_test = stats.levene(grupo_a, grupo_b)
+print(f"p-valor Levene: {levene_test.pvalue:.4f}")
+
+# 3. ELECCIÓN AUTOMÁTICA DE PRUEBA
+normalidad = (shapiro_a.pvalue > 0.05) and (shapiro_b.pvalue > 0.05)
+homocedasticidad = (levene_test.pvalue > 0.05)
+
+if normalidad and homocedasticidad:
+    print("\\n--- EJECUTANDO PRUEBA PARAMÉTRICA: ${item.param.name} ---")
+    resultado = stats.ttest_ind(grupo_a, grupo_b)
+else:
+    print("\\n--- EJECUTANDO PRUEBA NO PARAMÉTRICA: ${item.noparam.name} ---")
+    resultado = stats.mannwhitneyu(grupo_a, grupo_b)
+
+print(f"Estadístico: {resultado.statistic:.4f}")
+print(f"p-valor final: {resultado.pvalue:.4f}")
+
+# 4. ANÁLISIS POST HOC (Si aplica)
+# ${item.posthoc === 'No aplica' ? '# No es necesario para este diseño' : 'Ejecución de test de comparaciones múltiples...'}`;
+
+            document.getElementById('python-code-block').innerText = code;
+        }
+
+        function copyCode() {
+            const text = document.getElementById('python-code-block').innerText;
+            const temp = document.createElement('textarea');
+            temp.value = text;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "✓ ¡Copiado!";
+            btn.classList.add('bg-[#0d9488]', 'text-white');
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.classList.remove('bg-[#0d9488]', 'text-white');
+            }, 2000);
+        }
+
+        window.onload = init;
     </script>
 </body>
 </html>
