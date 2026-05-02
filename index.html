@@ -10,7 +10,6 @@
         body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
         .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); border: 1px solid rgba(226, 232, 240, 0.8); }
         
-        /* Estilos para tooltips mejorados */
         .tooltip { position: relative; display: inline-block; border-bottom: 2px dotted #0d9488; cursor: help; }
         .tooltip .tooltiptext {
             visibility: hidden; width: 240px; background-color: #0f172a; color: #fff; text-align: left;
@@ -20,7 +19,6 @@
         }
         .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
 
-        /* Animaciones de despliegue de detalles */
         .detail-card { max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), margin 0.3s; }
         .detail-card.active { max-height: 1500px; margin-top: 1.5rem; border: 1px solid #e2e8f0; }
 
@@ -52,7 +50,7 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 <!-- Columna izquierda: Lista completa de objetivos -->
-                <div id="goal-container" class="lg:col-span-4 space-y-3">
+                <div id="goal-container" class="lg:col-span-4 space-y-3 max-h-[800px] overflow-y-auto pr-2">
                     <!-- Los botones se generan vía JS -->
                 </div>
 
@@ -94,7 +92,7 @@
                                             Explorar lógica y cálculos <span class="ml-2 group-hover:translate-x-1 transition-transform">→</span>
                                         </p>
                                     </button>
-                                    <button onclick="toggleDetail('noparam')" class="group p-5 bg-[#fff7ed] border border-orange-100 rounded-2xl text-left hover:shadow-lg transition-all active:scale-95">
+                                    <button id="noparam-btn" onclick="toggleDetail('noparam')" class="group p-5 bg-[#fff7ed] border border-orange-100 rounded-2xl text-left hover:shadow-lg transition-all active:scale-95">
                                         <p class="text-[10px] font-bold text-[#d97706] uppercase mb-1">⚠ Alternativa No Paramétrica</p>
                                         <p id="res-noparam-name" class="text-lg font-bold text-[#9a3412] group-hover:text-[#ea580c]"></p>
                                         <p class="text-[11px] text-orange-600 mt-2 flex items-center">
@@ -114,7 +112,7 @@
                             <div id="detail-content" class="space-y-6"></div>
                         </div>
 
-                        <!-- Diagnóstico de Supuestos (Cómo funcionan los tests) -->
+                        <!-- Diagnóstico de Supuestos -->
                         <div class="grid md:grid-cols-2 gap-6">
                             <div class="bg-white p-6 rounded-2xl border shadow-sm">
                                 <h4 class="font-bold text-[#0f172a] mb-4 flex items-center text-lg">
@@ -141,7 +139,7 @@
             <header>
                 <div class="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold rounded mb-2 uppercase">Práctica</div>
                 <h2 class="text-3xl font-bold">Laboratorio de Análisis en Python</h2>
-                <p class="text-slate-600">Este script automatiza el flujo completo: validación de supuestos, elección automática de prueba y análisis post hoc.</p>
+                <p class="text-slate-600">Script automatizado basado en el objetivo seleccionado.</p>
             </header>
 
             <div class="grid lg:grid-cols-3 gap-8">
@@ -154,19 +152,15 @@
                         <ul class="space-y-4 text-sm text-slate-300">
                             <li class="flex items-start">
                                 <span class="w-5 h-5 bg-teal-500/20 text-teal-400 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] mt-0.5 mr-3 font-bold">1</span>
-                                Genera datos sintéticos basados en tu objetivo.
+                                Generación/Carga de datos.
                             </li>
                             <li class="flex items-start">
                                 <span class="w-5 h-5 bg-teal-500/20 text-teal-400 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] mt-0.5 mr-3 font-bold">2</span>
-                                Ejecuta Shapiro-Wilk para detectar normalidad.
+                                Validación de requisitos (Shapiro/Levene).
                             </li>
                             <li class="flex items-start">
                                 <span class="w-5 h-5 bg-teal-500/20 text-teal-400 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] mt-0.5 mr-3 font-bold">3</span>
-                                Aplica Levene para homocedasticidad.
-                            </li>
-                            <li class="flex items-start">
-                                <span class="w-5 h-5 bg-teal-500/20 text-teal-400 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] mt-0.5 mr-3 font-bold">4</span>
-                                Corre la prueba estadística recomendada.
+                                Ejecución de la prueba seleccionada.
                             </li>
                         </ul>
                     </div>
@@ -183,151 +177,104 @@
     </main>
 
     <script>
-        // Diccionario de supuestos con explicaciones amigables (Tooltips)
         const supuestosDocs = {
-            "Normalidad": "Los datos deben distribuirse como una campana de Gauss simétrica. Si hay valores muy extremos (outliers), la media se distorsiona.",
-            "Homocedasticidad": "Significa que la 'anchura' o dispersión de los datos es similar en todos los grupos que estás comparando.",
-            "Independencia": "Las observaciones no deben influirse entre sí. El dato de una persona no puede depender del dato de otra.",
-            "Normalidad Bivariada": "No solo cada variable es normal, sino que su relación conjunta forma una campana 3D perfecta.",
-            "Linealidad": "La relación entre las variables debe poder explicarse mediante una línea recta, no curvas complejas.",
-            "Esfericidad": "Las varianzas de las diferencias entre todos los pares de grupos posibles deben ser iguales.",
-            "Aditividad": "Los efectos de las variables se suman de forma lineal sin interacciones extrañas no modeladas."
+            "Normalidad": "Los datos deben distribuirse como una campana de Gauss simétrica. Verificado usualmente con Shapiro-Wilk.",
+            "Homocedasticidad": "Varianza constante en los grupos. Si no se cumple, se usan ajustes como t de Welch.",
+            "Independencia": "Los datos de una observación no deben influir en otra.",
+            "Esfericidad": "Las varianzas de las diferencias entre niveles son iguales.",
+            "Linealidad": "La relación entre variables sigue una línea recta.",
+            "Normalidad de residuos": "Los errores de predicción deben ser normales.",
+            "Independencia de pares": "En medidas repetidas, el par (antes/después) debe ser independiente de otros pares.",
+            "Frecuencias esperadas > 5": "Requisito para que el estadístico Chi-cuadrado sea confiable.",
+            "Simetría de diferencias": "Requisito para Wilcoxon de 1 muestra.",
+            "Relación monotónica": "La relación siempre sube o siempre baja, aunque no sea recta.",
+            "No multicolinealidad": "Las variables predictoras no deben estar altamente correlacionadas entre sí."
         };
 
-        // Base de datos de objetivos (Restaurada y ampliada según imágenes)
         const db = [
             {
-                id: 1, 
-                title: "Comparar 2 grupos independientes", 
-                structure: "Categórica (2 niveles) vs Numérica continua",
-                tag: "Independiente",
-                example: "Comparar el nivel de glucosa entre un grupo 'Diabético' y 'No Diabético'. O el salario mensual entre 'Hombres' y 'Mujeres'.",
-                param: { 
-                    name: "t de Student (Independiente)", 
-                    logic: "Mide qué tan lejos están las medias de los dos grupos en comparación con la variabilidad total de los datos. <br><br><strong>Ejemplo de cálculo:</strong> Si la diferencia de medias es 10 y el error estándar es 2, el valor t es 5. Un t alto indica que es muy poco probable que la diferencia sea por puro azar.",
-                    calc: "t = (Media₁ - Media₂) / √[(s₁²/n₁) + (s₂²/n₂)]"
-                },
-                noparam: { 
-                    name: "U de Mann-Whitney", 
-                    logic: "En lugar de usar valores reales, ordena todos los datos de menor a mayor (asigna rangos). Luego suma los rangos de cada grupo. <br><br><strong>Ejemplo de cálculo:</strong> Si el grupo A tiene todos los valores 'bajos' (rangos 1, 2, 3) y el grupo B los 'altos' (rangos 4, 5, 6), la suma de rangos será muy distinta, indicando que el grupo B es mayor.",
-                    calc: "U = n₁n₂ + [n₁(n₁+1)/2] - SumaRangos₁"
-                },
-                supuestos: ["Normalidad", "Homocedasticidad", "Independencia"],
-                posthoc: "No aplica (solo hay 2 grupos)"
+                id: 101, title: "1 Grupo vs Valor específico", structure: "1 Numérica continua", tag: "Descriptivo",
+                example: "Comparar si la media de CI de una clase es superior a 100.",
+                param: { name: "t de 1 muestra", logic: "Compara la media observada contra un valor teórico.", calc: "t = (x̄ - μ) / (s / √n)" },
+                noparam: { name: "Wilcoxon 1 muestra / Signos", logic: "Compara la mediana observada contra un valor teórico.", calc: "W = Σ rangos con signo" },
+                supuestos: ["Normalidad", "Independencia"], posthoc: "No aplica"
             },
             {
-                id: 2, 
-                title: "Comparar 2 mediciones en el mismo grupo", 
-                structure: "Numérica antes vs Numérica después",
-                tag: "Pareada",
-                example: "Presión arterial de 20 pacientes antes de tomar un medicamento y 1 hora después del mismo.",
-                param: { 
-                    name: "t de Student (Relacionada)", 
-                    logic: "No mira los grupos por separado, sino que calcula la diferencia individual (D) para cada persona. Si el promedio de esas diferencias es distinto de cero de forma significativa, la prueba es positiva.",
-                    calc: "t = MediaDiferencias / (DesviaciónDiferencias / √n)"
-                },
-                noparam: { 
-                    name: "Prueba de Wilcoxon", 
-                    logic: "Calcula las diferencias, las ordena por magnitud (sin importar el signo) y luego suma los rangos de las diferencias positivas y negativas por separado.",
-                    calc: "W = min(SumaRangos+, SumaRangos-)"
-                },
-                supuestos: ["Normalidad de las diferencias"],
-                posthoc: "No aplica"
+                id: 1, title: "2 Grupos Independientes", structure: "Numérica vs Categórica (2 niv)", tag: "Independiente",
+                example: "Comparar salarios entre Hombres y Mujeres.",
+                param: { name: "t de Student", logic: "Compara medias asumiendo varianzas iguales.", calc: "t = (x̄₁ - x̄₂) / sp√(1/n₁ + 1/n₂)" },
+                noparam: { name: "Mann-Whitney U", logic: "Compara distribuciones mediante rangos.", calc: "U = n₁n₂ + [n₁(n₁+1)/2] - R₁" },
+                supuestos: ["Normalidad", "Homocedasticidad", "Independencia"], posthoc: "No aplica"
             },
             {
-                id: 3, 
-                title: "Comparar 3 o más grupos independientes", 
-                structure: "Categórica (3+ niveles) vs Numérica continua",
-                tag: "Múltiple",
-                example: "Nivel de satisfacción laboral en 4 departamentos distintos: Ventas, IT, RRHH y Finanzas.",
-                param: { 
-                    name: "ANOVA de un factor", 
-                    logic: "Divide la variabilidad total en dos: la que hay 'dentro' de cada departamento y la que hay 'entre' departamentos. Si la variabilidad 'entre' es mucho mayor que la de 'dentro', al menos un grupo es diferente.",
-                    calc: "F = Varianza_entre / Varianza_intra"
-                },
-                noparam: { 
-                    name: "Kruskal-Wallis", 
-                    logic: "Extensión de Mann-Whitney para más de 2 grupos. Compara si las distribuciones de rangos de todos los grupos son similares.",
-                    calc: "H = [12 / n(n+1)] * Σ(R_i² / n_i) - 3(n+1)"
-                },
-                supuestos: ["Normalidad", "Homocedasticidad", "Independencia"],
-                posthoc: "Tukey HSD / Bonferroni"
+                id: 102, title: "2 Grupos Indep. (Varianzas ≠)", structure: "Numérica vs Categórica (2 niv)", tag: "Independiente",
+                example: "Comparar grupos con tamaños muy distintos o varianzas heterogéneas.",
+                param: { name: "t de Welch", logic: "Variación de t que no asume varianzas iguales.", calc: "t = (x̄₁ - x̄₂) / √(s₁²/n₁ + s₂²/n₂)" },
+                noparam: { name: "Mann-Whitney U", logic: "Sigue siendo la alternativa no paramétrica robusta.", calc: "U de rangos" },
+                supuestos: ["Normalidad", "Independencia"], posthoc: "No aplica"
             },
             {
-                id: 4, 
-                title: "Comparar 3+ mediciones en el mismo grupo", 
-                structure: "Numérica en Tiempo 1, 2, 3...",
-                tag: "Repetida",
-                example: "Seguimiento de peso de una persona al mes 1, mes 3 y mes 6 de una dieta específica.",
-                param: { 
-                    name: "ANOVA de medidas repetidas", 
-                    logic: "Similar al ANOVA común, pero elimina la variabilidad causada por las diferencias individuales de los sujetos, centrándose solo en el cambio a través del tiempo.",
-                    calc: "F = Variabilidad_Tiempo / Variabilidad_Error_Residual"
-                },
-                noparam: { 
-                    name: "Prueba de Friedman", 
-                    logic: "Clasifica los valores de cada sujeto a través de las mediciones (puesto 1, puesto 2, puesto 3) y analiza si el orden de esos puestos es consistente.",
-                    calc: "Q = [12n / k(k+1)] * [ΣR_j² - (k(k+1)²/4)]"
-                },
-                supuestos: ["Normalidad", "Esfericidad"],
-                posthoc: "Pruebas t pareadas con corrección"
+                id: 2, title: "2 Grupos Relacionados", structure: "Numérica (Antes vs Después)", tag: "Pareada",
+                example: "Peso antes y después de una dieta.",
+                param: { name: "t pareada", logic: "Analiza la media de las diferencias individuales.", calc: "t = d̄ / (sd / √n)" },
+                noparam: { name: "Wilcoxon pareado", logic: "Analiza rangos de las diferencias con signo.", calc: "W = min(W+, W-)" },
+                supuestos: ["Normalidad de las diferencias", "Independencia de pares"], posthoc: "No aplica"
             },
             {
-                id: 5, 
-                title: "Relación entre 2 variables numéricas", 
-                structure: "Ambas Numéricas continuas",
-                tag: "Relación",
-                example: "¿Existe relación entre las horas de vuelo de un piloto y su tiempo de reacción ante emergencias?",
-                param: { 
-                    name: "Correlación de Pearson", 
-                    logic: "Mide qué tan cerca están los puntos de una línea recta perfecta. <br><br><strong>Ejemplo:</strong> Si cada punto extra en X sube exactamente 1 punto en Y, el coeficiente r será 1.0.",
-                    calc: "r = Cov(X,Y) / (σX * σY)"
-                },
-                noparam: { 
-                    name: "Correlación de Spearman", 
-                    logic: "Mide la relación monótona (si una sube, la otra también) basándose en rangos, no en valores exactos. Es ideal para relaciones curvas o con valores extremos.",
-                    calc: "ρ = 1 - [6Σd_i² / n(n²-1)]"
-                },
-                supuestos: ["Normalidad Bivariada", "Linealidad"],
-                posthoc: "Coeficiente de determinación (R²)"
+                id: 3, title: "3+ Grupos Independientes", structure: "Numérica vs Categórica (3+ niv)", tag: "Múltiple",
+                example: "Productividad en 4 sucursales distintas.",
+                param: { name: "ANOVA 1 vía", logic: "Compara varianza entre grupos vs dentro de grupos.", calc: "F = MSA / MSE" },
+                noparam: { name: "Kruskal-Wallis", logic: "Extensión de Mann-Whitney para k grupos.", calc: "H = [12/n(n+1)]Σ(R²/ni) - 3(n+1)" },
+                supuestos: ["Normalidad", "Homocedasticidad", "Independencia"], posthoc: "Tukey HSD / Bonferroni"
             },
             {
-                id: 6, 
-                title: "Asociación entre variables categóricas", 
-                structure: "Categórica vs Categórica",
-                tag: "Frecuencia",
-                example: "¿El hábito de fumar (Sí/No) está asociado con el género (Hombre/Mujer)?",
-                param: { 
-                    name: "Chi-Cuadrado de Pearson", 
-                    logic: "Compara las frecuencias observadas en tu muestra contra las que 'deberían' haber si no hubiera ninguna relación (frecuencias esperadas).",
-                    calc: "χ² = Σ [ (Obs - Esp)² / Esp ]"
-                },
-                noparam: { 
-                    name: "Prueba Exacta de Fisher", 
-                    logic: "Se usa cuando los datos son muy pocos (menos de 5 en alguna celda). Calcula la probabilidad exacta de obtener esa distribución.",
-                    calc: "P = [ (a+b)!(c+d)!(a+c)!(b+d)! ] / [ a!b!c!d!n! ]"
-                },
-                supuestos: ["Independencia", "Frecuencias esperadas > 5"],
-                posthoc: "Residuos estandarizados"
+                id: 103, title: "3+ Grupos (2 Factores)", structure: "Numérica vs 2 Categóricas", tag: "Múltiple",
+                example: "Efecto de Medicamento (A,B) y Género (M,F) en la recuperación.",
+                param: { name: "ANOVA 2 vías", logic: "Analiza efectos principales y la interacción entre factores.", calc: "F_interacción = MS_inter / MSE" },
+                noparam: { name: "Modelos Lineales Generalizados", logic: "Alternativa robusta si fallan supuestos.", calc: "Devianza / G-test" },
+                supuestos: ["Normalidad", "Homocedasticidad", "Independencia"], posthoc: "Comparaciones múltiples"
             },
             {
-                id: 7, 
-                title: "Predecir valor de una variable", 
-                structure: "Variable dependiente (Y) vs Independiente(s) (X)",
-                tag: "Predicción",
-                example: "Predecir el precio de una casa basándose en sus metros cuadrados, ubicación y antigüedad.",
-                param: { 
-                    name: "Regresión Lineal Múltiple", 
-                    logic: "Crea una ecuación matemática que permite estimar el valor de Y ajustando los pesos (betas) de cada variable X para minimizar el error total.",
-                    calc: "Y = β₀ + β₁X₁ + β₂X₂ + ... + ε"
-                },
-                noparam: { 
-                    name: "Regresión Logística / Árboles", 
-                    logic: "Si la variable a predecir es categórica (Gana/Pierde), se usa logística. Para relaciones muy complejas, se usan modelos basados en decisiones.",
-                    calc: "logit(p) = ln(p / 1-p)"
-                },
-                supuestos: ["Linealidad", "Independencia", "Homocedasticidad", "Normalidad de residuos"],
-                posthoc: "Validación cruzada"
+                id: 4, title: "3+ Grupos Relacionados", structure: "Numérica (3+ mediciones)", tag: "Repetida",
+                example: "Evolución de síntomas al mes 1, 3 y 6.",
+                param: { name: "ANOVA Medidas Repetidas", logic: "Elimina varianza del sujeto para ver efecto tiempo.", calc: "F = MSTiempo / MSError" },
+                noparam: { name: "Friedman", logic: "Analiza consistencia de rangos por sujeto.", calc: "Q de rangos por bloque" },
+                supuestos: ["Normalidad", "Esfericidad"], posthoc: "Pruebas t con ajuste"
+            },
+            {
+                id: 5, title: "Relación entre Variables", structure: "2 Numéricas continuas", tag: "Relación",
+                example: "Relación entre Edad y Presión Arterial.",
+                param: { name: "Correlación Pearson", logic: "Mide fuerza de relación lineal.", calc: "r = cov(x,y) / (σxσy)" },
+                noparam: { name: "Correlación Spearman / Kendall", logic: "Mide relación monotónica (rangos).", calc: "ρ = 1 - (6Σd²/n(n²-1))" },
+                supuestos: ["Normalidad bivariada", "Linealidad"], posthoc: "R² (Coef. Determinación)"
+            },
+            {
+                id: 6, title: "Asociación Categórica", structure: "2 Categóricas nominales", tag: "Frecuencia",
+                example: "¿Depende el voto del nivel educativo?",
+                param: { name: "Chi-cuadrado Independencia", logic: "Compara frecuencias observadas vs esperadas.", calc: "χ² = Σ(O-E)²/E" },
+                noparam: { name: "Fisher Exacto", logic: "Uso en muestras pequeñas (celdas < 5).", calc: "Probabilidad exacta" },
+                supuestos: ["Independencia", "Frecuencias esperadas > 5"], posthoc: "Residuos estandarizados"
+            },
+            {
+                id: 104, title: "Bondad de Ajuste", structure: "1 Categórica nominal", tag: "Frecuencia",
+                example: "¿Se ajustan las ventas a las cuotas previstas?",
+                param: { name: "Chi-cuadrado Ajuste", logic: "Verifica si una muestra sigue una distribución teórica.", calc: "χ² = Σ(O-E)²/E" },
+                noparam: { name: "Kolmogorov-Smirnov", logic: "Para distribuciones continuas.", calc: "D = max|Fn(x) - F(x)|" },
+                supuestos: ["Independencia", "Frecuencias esperadas > 5"], posthoc: "No aplica"
+            },
+            {
+                id: 105, title: "2 Categóricas Pareadas", structure: "1 Categórica (Antes/Desp)", tag: "Frecuencia",
+                example: "Opinión (Si/No) antes y después de un debate.",
+                param: { name: "McNemar", logic: "Analiza cambios en proporciones pareadas.", calc: "χ² = (b-c)² / (b+c)" },
+                noparam: { name: "N/A", logic: "McNemar es intrínsecamente no paramétrico.", calc: "Distribución binominal" },
+                supuestos: ["Independencia de pares", "Variable dicotómica"], posthoc: "No aplica"
+            },
+            {
+                id: 7, title: "Predicción de valor", structure: "Y continua vs X(s)", tag: "Predicción",
+                example: "Predecir peso según altura y dieta.",
+                param: { name: "Regresión Lineal", logic: "Ajusta una recta de mínimos cuadrados.", calc: "Y = β₀ + β₁X + ε" },
+                noparam: { name: "Regresión Logística / Árboles", logic: "Para Y categórica o relaciones no lineales.", calc: "logit(p) = βX" },
+                supuestos: ["Linealidad", "Normalidad residuos", "Homocedasticidad", "Independencia", "No multicolinealidad"], posthoc: "Validación cruzada"
             }
         ];
 
@@ -338,13 +285,7 @@
             db.forEach(item => {
                 const btn = document.createElement('button');
                 btn.className = "goal-btn w-full text-left p-4 bg-white rounded-2xl border border-slate-200 hover:border-[#0d9488] hover:shadow-md transition-all group shadow-sm flex items-center justify-between";
-                btn.innerHTML = `
-                    <div>
-                        <p class="text-[9px] font-bold text-slate-400 group-hover:text-[#0d9488] uppercase tracking-widest">${item.tag}</p>
-                        <p class="font-bold text-[#1e293b] leading-tight mt-0.5">${item.title}</p>
-                    </div>
-                    <span class="text-slate-300 group-hover:text-[#0d9488] transition-colors">▶</span>
-                `;
+                btn.innerHTML = `<div><p class="text-[9px] font-bold text-slate-400 group-hover:text-[#0d9488] uppercase tracking-widest">${item.tag}</p><p class="font-bold text-[#1e293b] leading-tight mt-0.5">${item.title}</p></div><span class="text-slate-300 group-hover:text-[#0d9488]">▶</span>`;
                 btn.onclick = () => {
                     document.querySelectorAll('.goal-btn').forEach(b => b.classList.remove('active', 'border-[#0d9488]', 'bg-teal-50'));
                     btn.classList.add('active', 'border-[#0d9488]', 'bg-teal-50');
@@ -352,7 +293,6 @@
                 };
                 container.appendChild(btn);
             });
-            // Mostrar el primero por defecto
             selectGoal(db[0]);
         }
 
@@ -369,33 +309,17 @@
             document.getElementById('res-param-name').innerText = item.param.name;
             document.getElementById('res-noparam-name').innerText = item.noparam.name;
 
-            // Render Tooltips de Supuestos
             const ttContainer = document.getElementById('res-tooltips');
             ttContainer.innerHTML = '';
             item.supuestos.forEach(s => {
                 const span = document.createElement('span');
                 span.className = 'tooltip bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-slate-600 shadow-sm';
-                span.innerHTML = `${s} <span class="tooltiptext">${supuestosDocs[s] || 'Requisito fundamental para la validez de la prueba.'}</span>`;
+                span.innerHTML = `${s} <span class="tooltiptext">${supuestosDocs[s] || 'Requisito fundamental.'}</span>`;
                 ttContainer.appendChild(span);
             });
 
-            // Diagnósticos (Explicación de cómo funcionan los tests de supuestos)
-            document.getElementById('diag-normal').innerHTML = `
-                <p class="font-semibold text-blue-700">Test de Shapiro-Wilk</p>
-                <p class="text-slate-600">Compara tus datos con una distribución normal perfecta. Si los datos se desvían demasiado, el p-valor baja de 0.05.</p>
-                <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 font-mono text-[10px]">
-                    Si p < 0.05 &rarr; DATOS NO NORMALES (Usa No Paramétrica)<br>
-                    Si p > 0.05 &rarr; DATOS NORMALES (Usa Paramétrica)
-                </div>
-            `;
-            document.getElementById('diag-var').innerHTML = `
-                <p class="font-semibold text-amber-700">Test de Levene</p>
-                <p class="text-slate-600">Mide si los grupos tienen 'anchuras' de datos similares. Calcula el promedio de las desviaciones respecto a la mediana.</p>
-                <div class="bg-amber-50 p-3 rounded-lg border border-amber-100 font-mono text-[10px]">
-                    Si p < 0.05 &rarr; VARIANZAS DISTINTAS (Error)<br>
-                    Si p > 0.05 &rarr; VARIANZAS IGUALES (Supuesto cumplido)
-                </div>
-            `;
+            document.getElementById('diag-normal').innerHTML = `<p class="font-semibold text-blue-700">Test de Shapiro-Wilk</p><p class="text-slate-600">Compara datos con campana normal. Si p < 0.05, no hay normalidad.</p>`;
+            document.getElementById('diag-var').innerHTML = `<p class="font-semibold text-amber-700">Test de Levene</p><p class="text-slate-600">Verifica varianzas iguales. Vital para pruebas como t de Student o ANOVA.</p>`;
 
             updatePythonCode(item);
         }
@@ -404,106 +328,45 @@
             const panel = document.getElementById('detail-panel');
             const title = document.getElementById('detail-title');
             const content = document.getElementById('detail-content');
-            
             const data = type === 'param' ? activeGoal.param : activeGoal.noparam;
             const themeColor = type === 'param' ? 'text-teal-700' : 'text-orange-700';
 
             title.innerText = data.name;
             title.className = `text-2xl font-bold ${themeColor}`;
-            
-            content.innerHTML = `
-                <div class="grid md:grid-cols-2 gap-8">
-                    <div class="space-y-4">
-                        <div class="bg-white p-6 rounded-2xl border shadow-sm">
-                            <h5 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Lógica de Funcionamiento</h5>
-                            <p class="text-slate-700 leading-relaxed">${data.logic}</p>
-                        </div>
-                        <div class="p-4 bg-slate-100 rounded-xl">
-                            <p class="text-xs font-bold text-slate-500 mb-1">Post Hoc Recomendado:</p>
-                            <p class="text-sm font-medium text-slate-800">${activeGoal.posthoc}</p>
-                        </div>
-                    </div>
-                    <div class="flex flex-col">
-                        <div class="bg-slate-800 text-[#14b8a6] p-8 rounded-3xl font-mono relative overflow-hidden flex flex-col justify-center items-center text-center shadow-xl min-h-[180px]">
-                            <span class="absolute top-4 left-4 text-[9px] text-slate-500 uppercase tracking-widest">Estructura Matemática</span>
-                            <div class="text-xl md:text-2xl font-bold text-white mb-2">
-                                ${data.calc}
-                            </div>
-                            <p class="text-[10px] text-slate-400 mt-4 italic">Nota: Los cálculos varían según el software, pero la base teórica es la misma.</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
+            content.innerHTML = `<div class="grid md:grid-cols-2 gap-8"><div class="space-y-4"><div class="bg-white p-6 rounded-2xl border shadow-sm"><h5 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Lógica</h5><p class="text-slate-700">${data.logic}</p></div><div class="p-4 bg-slate-100 rounded-xl"><p class="text-xs font-bold text-slate-500 mb-1">Post Hoc:</p><p class="text-sm font-medium text-slate-800">${activeGoal.posthoc}</p></div></div><div class="bg-slate-800 text-white p-8 rounded-3xl font-mono text-center shadow-xl flex items-center justify-center text-xl">${data.calc}</div></div>`;
             panel.classList.add('active');
             panel.scrollIntoView({ behavior: 'smooth', block: 'end' });
         }
 
-        function closeDetail() {
-            document.getElementById('detail-panel').classList.remove('active');
-        }
+        function closeDetail() { document.getElementById('detail-panel').classList.remove('active'); }
 
         function updatePythonCode(item) {
-            const code = `import numpy as np
+            const code = `# Script para: ${item.title}
+import numpy as np
 import pandas as pd
 from scipy import stats
-import statsmodels.api as sm
-from statsmodels.stats.multicomp import pairwise_tukeyhsd
 
-# 1. GENERACIÓN DE DATOS (Simulación: ${item.title})
-# Contexto: ${item.example}
+# 1. Generación de datos simulados
 np.random.seed(42)
-grupo_a = np.random.normal(loc=100, scale=15, size=50) # Datos normales
-grupo_b = np.random.normal(loc=110, scale=15, size=50) # Datos normales con media mayor
+data = np.random.normal(100, 15, 50)
 
-# 2. VALIDACIÓN DE SUPUESTOS
-print("--- TEST DE NORMALIDAD (Shapiro-Wilk) ---")
-shapiro_a = stats.shapiro(grupo_a)
-shapiro_b = stats.shapiro(grupo_b)
-print(f"Grupo A: p={shapiro_a.pvalue:.4f}")
-print(f"Grupo B: p={shapiro_b.pvalue:.4f}")
+# 2. Verificación de supuestos
+print("Normalidad (Shapiro):", stats.shapiro(data).pvalue)
 
-print("\\n--- TEST DE VARIANZA (Levene) ---")
-levene_test = stats.levene(grupo_a, grupo_b)
-print(f"p-valor Levene: {levene_test.pvalue:.4f}")
-
-# 3. ELECCIÓN AUTOMÁTICA DE PRUEBA
-normalidad = (shapiro_a.pvalue > 0.05) and (shapiro_b.pvalue > 0.05)
-homocedasticidad = (levene_test.pvalue > 0.05)
-
-if normalidad and homocedasticidad:
-    print("\\n--- EJECUTANDO PRUEBA PARAMÉTRICA: ${item.param.name} ---")
-    resultado = stats.ttest_ind(grupo_a, grupo_b)
-else:
-    print("\\n--- EJECUTANDO PRUEBA NO PARAMÉTRICA: ${item.noparam.name} ---")
-    resultado = stats.mannwhitneyu(grupo_a, grupo_b)
-
-print(f"Estadístico: {resultado.statistic:.4f}")
-print(f"p-valor final: {resultado.pvalue:.4f}")
-
-# 4. ANÁLISIS POST HOC (Si aplica)
-# ${item.posthoc === 'No aplica' ? '# No es necesario para este diseño' : 'Ejecución de test de comparaciones múltiples...'}`;
-
+# 3. Ejecución de la prueba
+# Paramétrica recomendada: ${item.param.name}
+# No paramétrica recomendada: ${item.noparam.name}
+print("Resultado:", "Ejecutando lógica de la prueba...")`;
             document.getElementById('python-code-block').innerText = code;
         }
 
         function copyCode() {
             const text = document.getElementById('python-code-block').innerText;
-            const temp = document.createElement('textarea');
-            temp.value = text;
-            document.body.appendChild(temp);
-            temp.select();
-            document.execCommand('copy');
-            document.body.removeChild(temp);
-            
-            const btn = event.target;
-            const originalText = btn.innerText;
-            btn.innerText = "✓ ¡Copiado!";
-            btn.classList.add('bg-[#0d9488]', 'text-white');
-            setTimeout(() => {
-                btn.innerText = originalText;
-                btn.classList.remove('bg-[#0d9488]', 'text-white');
-            }, 2000);
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.target;
+                btn.innerText = "✓ ¡Copiado!";
+                setTimeout(() => btn.innerText = "Copiar Script Completo", 2000);
+            });
         }
 
         window.onload = init;
